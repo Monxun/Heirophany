@@ -75,6 +75,9 @@ Step 5: Push Images to Artifact Repository
 
 # CICD CONFIGURATION
 
+- TALOS
+https://www.talos.dev/
+
 - JENKINS:
 https://www.youtube.com/watch?app=desktop&v=IDoRWieTcMc&feature=youtu.be
 https://www.linkedin.com/pulse/create-cicd-pipeline-jenkins-google-kubernetes-engine-pralay-debroy/?trk=articles_directory
