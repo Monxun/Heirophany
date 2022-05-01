@@ -3,11 +3,11 @@
 
 DESCRIPTION: Contains Portable Workflows, Best Practices, And Resources For ALL DEPLOYMENTS!
 
-/DEPLOYMENTS: 
+/DEPLOYMENTS
 Portable Deployment Pipelines
-/DIAGRAMS: 
+/DIAGRAMS
 Component / Workflow Diagrams
-/TEMPLATES: 
+/TEMPLATES
 Component Code Templates / Modules / Configs / YAML / Etc...
 
 # PROJECT WORKFLOW OUTLINE
