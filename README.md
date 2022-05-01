@@ -2,11 +2,11 @@
 # HEIROPHANY - Monxun's Kubernetes/DevOps Toolbox
 
 DESCRIPTION: 
-Contains Portable Workflows, Best Practices, And Resources For ALL DEPLOYMENTS!
+Contains Portable Workflows, Best Practices, And Resources For Deploying Scalable Apps & Infrastructure!
 
-/DEPLOYMENT - Portable Deployment Pipelines
-/DIAGRAMS   - Component, Workflow Diagrams
-/TEMPLATES  - Component Code Templates, Modules, Configs, YAML, Etc...
+- DEPLOYMENT:   Portable Deployment Pipelines
+- DIAGRAMS:     Component, Workflow Diagrams
+- TEMPLATES:    Component Code Templates, Modules, Configs, YAML, Etc...
 
 # PROJECT WORKFLOW OUTLINE
 
