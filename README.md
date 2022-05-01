@@ -9,20 +9,20 @@ DESCRIPTION: Contains Portable Workflows, Best Practices, And Resources For ALL 
 
 # PROJECT WORKFLOW OUTLINE
 
-- PLANNING:
+PLANNING:
 1. Diagram Containers / Networking / Clusters / Deployment
 
-- CONTAINERS & IMAGES:
+CONTAINERS & IMAGES:
 2. Create Dockerfiles / Compose / .env
 3. Test Stacks Locally
 
-- KUBERNETES:
+KUBERNETES:
 4. Create Kubernetes Manifests / Secrets / Configmaps
 5. Test Kubernetes Manifests Locally
 6. Create Helm Charts / Crossplane Custom Objects
 7. Add Sidecar Apps / Service Mesh / Vault / Logging / Monitoring / As Chart Dependencies
 
-- CICD:
+CICD:
 8. Create Terraform Files
 9. Create Ansible Playbooks
 10. Create Jenkins Files / Gitflows
@@ -38,7 +38,7 @@ https://cloud.google.com/sdk/docs/install-sdk
 * AUTHENTICATE USING SMOOTHSTACK GMAIL
 
 
-- Step 2: Configure GClOUD CLI & Authorize Image / Helm Repositories
+Step 2: Configure GClOUD CLI & Authorize Image / Helm Repositories
 
     `gcloud init`
 
@@ -46,14 +46,14 @@ https://cloud.google.com/sdk/docs/install-sdk
         us-east1-docker.pkg.dev`
 
 
-- Step 3: Create Project
+Step 3: Create Project
 
     `export PROJECT_ID=<your-project-id>`
 
     `gcloud projects create $PROJECT_ID --name=$PROJECT_ID --set-as-default`
 
 
-- Step 4: Create Subnet and Cluster in Project VPC
+Step 4: Create Subnet and Cluster in Project VPC
 
     `gcloud container clusters create CLUSTER_NAME \
             --region=us-east1 \
@@ -63,7 +63,7 @@ https://cloud.google.com/sdk/docs/install-sdk
     `kubectl cluster-info`
 
 
-- Step 5: Push Images to Artifact Repository
+Step 5: Push Images to Artifact Repository
 
 (IMAGE NAME FORMAT: us-east--docker.pkg.dev/aline-jenkins-gcp/nightwalkers-images/your-image-name)
 
