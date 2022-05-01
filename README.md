@@ -3,31 +3,31 @@
 
 DESCRIPTION: Contains Portable Workflows, Best Practices, And Resources For ALL DEPLOYMENTS!
 
-- /DEPLOYMENTS: Portable Deployment Pipelines
-- /DIAGRAMS: Component / Workflow Diagrams
-- /TEMPLATES: Component Code Templates / Modules / Configs / YAML / Etc...
+/DEPLOYMENTS: Portable Deployment Pipelines
+/DIAGRAMS: Component / Workflow Diagrams
+/TEMPLATES: Component Code Templates / Modules / Configs / YAML / Etc...
 
 # PROJECT WORKFLOW OUTLINE
 
 PLANNING
-1. Diagram Containers / Networking / Clusters / Deployment
+- 1. Diagram Containers / Networking / Clusters / Deployment
 
 CONTAINERS & IMAGES
-2. Create Dockerfiles / Compose / .env
-3. Test Stacks Locally
+- 2. Create Dockerfiles / Compose / .env
+- 3. Test Stacks Locally
 
 KUBERNETES
-4. Create Kubernetes Manifests / Secrets / Configmaps
-5. Test Kubernetes Manifests Locally
-6. Create Helm Charts / Crossplane Custom Objects
-7. Add Sidecar Apps / Service Mesh / Vault / Logging / Monitoring / As Chart Dependencies
+- 4. Create Kubernetes Manifests / Secrets / Configmaps
+- 5. Test Kubernetes Manifests Locally
+- 6. Create Helm Charts / Crossplane Custom Objects
+- 7. Add Sidecar Apps / Service Mesh / Vault / Logging / Monitoring / As Chart Dependencies
 
 CICD
-8. Create Terraform Files
-9. Create Ansible Playbooks
-10. Create Jenkins Files / Gitflows
-11. Setup Repositories
-12. Test Pipeline
+- 8. Create Terraform Files
+- 9. Create Ansible Playbooks
+- 10. Create Jenkins Files / Gitflows
+- 11. Setup Repositories
+- 12. Test Pipeline
 
 
 # GCP ALine Jenkins CI/CD Pipeline 
