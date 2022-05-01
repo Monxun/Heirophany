@@ -1,3 +1,4 @@
+![GCP-Cluster-Diagram](diagrams/GCPClusterDeployment.drawio.png) 
 # HEIROPHANY - Monxun's Kubernetes/DevOps Toolbox
 
 DESCRIPTION: Contains Portable Workflows, Best Practices, And Resources For ALL DEPLOYMENTS!
