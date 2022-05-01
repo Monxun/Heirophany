@@ -1,13 +1,13 @@
 # PROJECT WORKFLOW OUTLINE
 
-# PLANNING:
+- PLANNING:
 1. Diagram Containers / Networking / Clusters / Deployment
 
-# CONTAINERS & IMAGES:
+- CONTAINERS & IMAGES:
 2. Create Dockerfiles / Compose / .env
 3. Test Stacks Locally
 
-# KUBERNETES:
+- KUBERNETES:
 4. Create Kubernetes Manifests / Secrets / Configmaps
 5. Test Kubernetes Manifests Locally
 6. Create Helm Charts / Crossplane Custom Objects
