@@ -1,0 +1,50 @@
+version: '3.9'
+
+services:
+
+  django-portfolio:
+    image: django-portfolio:0.1
+    container_name: django-portfolio
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file: ./.env
+    ports:
+      - "8000:8000"
+    command: >
+      sh -c "python manage.py wait_for_db &&
+             python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - static-data:/vol/web
+    networks:
+      - monxun-apps
+
+  postgres:
+    image: postgres:13-alpine
+    environment:
+    env_file: ./.env
+    networks:
+      - monxun-apps
+
+  proxy:
+    build:
+      context: ./proxy
+    restart: always
+    depends_on:
+      - django-portfolio
+    ports:
+      - 80:8000
+    volumes:
+      - static-data:/vol/static
+    networks:
+      - monxun-apps
+
+
+volumes:
+  postgres-data:
+  static-data:
+
+networks:
+  monxun-apps:

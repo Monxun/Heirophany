@@ -1,0 +1,20 @@
+# The polls service provides a load-balancing proxy over the polls app
+# pods. By specifying the type as a 'LoadBalancer', Kubernetes Engine will
+# create an external HTTP load balancer.
+# For more information about Services see:
+#   https://kubernetes.io/docs/concepts/services-networking/service/
+# For more information about external HTTP load balancing see:
+#   https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/
+apiVersion: v1
+kind: Service
+metadata:
+  name: monxun-apps
+  labels:
+    app: polls
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 8080
+  selector:
+    app: monxun-apps

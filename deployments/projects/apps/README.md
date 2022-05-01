@@ -9,7 +9,7 @@ Components:
         2. portfolio
         3. treehaus
         4. aline
-
+ 
     - Storage Helm Charts:
         1. Redis
         2. Postgres
