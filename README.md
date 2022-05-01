@@ -3,26 +3,26 @@
 
 DESCRIPTION: Contains Portable Workflows, Best Practices, And Resources For ALL DEPLOYMENTS!
 
-- DEPLOYMENTS: Portable Deployment Pipelines
-- DIAGRAMS: Component / Workflow Diagrams
-- TEMPLATES: Component Code Templates / Modules / Configs / YAML / Etc...
+- /DEPLOYMENTS: Portable Deployment Pipelines
+- /DIAGRAMS: Component / Workflow Diagrams
+- /TEMPLATES: Component Code Templates / Modules / Configs / YAML / Etc...
 
 # PROJECT WORKFLOW OUTLINE
 
-PLANNING:
+PLANNING
 1. Diagram Containers / Networking / Clusters / Deployment
 
-CONTAINERS & IMAGES:
+CONTAINERS & IMAGES
 2. Create Dockerfiles / Compose / .env
 3. Test Stacks Locally
 
-KUBERNETES:
+KUBERNETES
 4. Create Kubernetes Manifests / Secrets / Configmaps
 5. Test Kubernetes Manifests Locally
 6. Create Helm Charts / Crossplane Custom Objects
 7. Add Sidecar Apps / Service Mesh / Vault / Logging / Monitoring / As Chart Dependencies
 
-CICD:
+CICD
 8. Create Terraform Files
 9. Create Ansible Playbooks
 10. Create Jenkins Files / Gitflows
@@ -32,7 +32,7 @@ CICD:
 
 # GCP ALine Jenkins CI/CD Pipeline 
 
-- Step 1: Setup GCLOUD CLI
+Step 1: Setup GCLOUD CLI
 https://cloud.google.com/sdk/docs/install-sdk
 
 * AUTHENTICATE USING SMOOTHSTACK GMAIL
