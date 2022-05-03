@@ -4,7 +4,7 @@ pipeline {
     agent any
 
     environment {
-        AWS_CREDENTIALS = credentials('jenkins')
+        AWS_CREDENTIALS = credentials('aws-jenkins')
         AWS_DEFAULT_REGION = '${AWS_DEFAULT_REGION}'
         IMAGE_REPO = '${AWS_REPO}'
         IMAGE_NAME = 'aline-bank-mg'
