@@ -33,6 +33,7 @@ PIPELINES:
         * Define ENV Variables
         * Define Kubernetes Agent
         * Install Dependencies
+        * USEF IF/THEN/ELSE LOGIC WITH ENV VARIABLES TO TEMPLATE THE JENKINSFILE BEAHVIOR (i.e. deployment_namespace=dev, deployment=dev, trigger different scans or quality gates for different stages dev, stage, prod, etc...)
         
         - gcloud auth / aws auth
         - jfrog cli + auth
@@ -54,6 +55,7 @@ PIPELINES:
         * Define ENV Variables
         * Define Kubernetes Agent
         * Install Dependencies
+        * USEF IF/THEN/ELSE LOGIC WITH ENV VARIABLES TO TEMPLATE THE JENKINSFILE BEAHVIOR (i.e. deployment_namespace=dev, deployment=dev, trigger different scans or quality gates for different stages dev, stage, prod, etc...)
         
         - gcloud auth / aws auth
         - jfrog cli + auth
@@ -73,6 +75,7 @@ PIPELINES:
         * Define ENV Variables
         * Define Kubernetes Agent
         * Install Dependencies
+        * USEF IF/THEN/ELSE LOGIC WITH ENV VARIABLES TO TEMPLATE THE JENKINSFILE BEAHVIOR (i.e. deployment_namespace=dev, deployment=dev, trigger different scans or quality gates for different stages dev, stage, prod, etc...)
         
         - gcloud auth / aws auth
         - jfrog cli + auth
