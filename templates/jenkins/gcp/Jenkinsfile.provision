@@ -1,39 +1,45 @@
 pipeline {
     agent any
     environment {
-        PROJECT_ID = '<<Your GCP Project ID>>'
-        CLUSTER_NAME = '<<Your GKE Cluster Name>>'
-        LOCATION = '<<Your GKE Cluster Location>>'
-        CREDENTIALS_ID = 'multi-k8s'
+        PROJECT_ID = '${GCP_PROJECT_ID}'
+        LOCATION = '${GCP_GKE_LOCATION}'
+        GCLOUD_CREDS=credentials('gcloud-creds')
+        CLIENT_EMAIL = '${GCP_CLIENT_EMAIL}'
+        IMAGE_REPO = '${GCP_REPO}'
+        HELM_REPO ='${AWS_HELM_REPO}'
+        HELM_BUILD = true
+        SIDECAR_INSTALL = true
+        BUILD_ID = '0.1'
     }
     stages {
-        stage("Checkout code") {
-            steps {
-                checkout scm
+        stage('clean workspace') {
+            steps {EKS
+                cleanWs()
             }
         }
-        stage("Build image") {
+        stage('AUTH W/ CREDENTIALS MANAGER ENVIRONMENT GCP') {
             steps {
-                script {
-                    myapp = docker.build("<<Your DockerHub username>>/hello:${env.BUILD_ID}")
-                }
+                sh '''
+                gcloud version
+                gcloud auth activate-service-account --key-file="$GCLOUD_CREDS"
+                gcloud compute zones list
+                gcloud config set project "${PROJECT_ID}"
+                '''
             }
         }
-        stage("Push image") {
+        stage('Provision Cluster') {
             steps {
-                script {
-                    docker.withRegistry('https://registry.hub.docker.com', 'dockerID') {
-                            myapp.push("latest")
-                            myapp.push("${env.BUILD_ID}")
-                    }
-                }
-            }
-        }        
-        stage('Deploy to GKE') {
-            steps{
-                sh "sed -i 's/hello:latest/hello:${env.BUILD_ID}/g' deployment.yaml"
-                step([$class: 'KubernetesEngineBuilder', projectId: env.PROJECT_ID, clusterName: env.CLUSTER_NAME, location: env.LOCATION, manifestPattern: 'deployment.yaml', credentialsId: env.CREDENTIALS_ID, verifyDeployments: true])
+                // GKE
+                sh """
+                    
+                """
             }
         }
-    }    
+    post {
+        always {
+            cleanWs()
+            sh "docker system prune -f --volumes"
+            sh 'gcloud auth revoke $CLIENT_EMAIL'
+        }
+    }   
 }

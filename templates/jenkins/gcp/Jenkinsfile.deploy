@@ -1,0 +1,42 @@
+pipeline {
+    agent any
+    environment {
+        PROJECT_ID = '${GCP_PROJECT_ID}'
+        LOCATION = '${GCP_GKE_LOCATION}'
+        GCLOUD_CREDS=credentials('gcloud-creds')
+        CLIENT_EMAIL = '${GCP_CLIENT_EMAIL}'
+        IMAGE_REPO = '${GCP_REPO}'
+        BUILD_ID = '0.1'
+    }
+    stages {
+        stage('clean workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+        stage('AUTH W/ CREDENTIALS MANAGER ENVIRONMENT GCP') {
+            steps {
+                sh '''
+                gcloud version
+                gcloud auth activate-service-account --key-file="$GCLOUD_CREDS"
+                gcloud compute zones list
+                gcloud config set project "${PROJECT_ID}"
+                '''
+            }
+        }
+        stage('Deploy') {
+            steps {
+                // DEPLOY IMAGES TO GKE
+                sh """
+                    
+                """
+            }
+        }
+    post {
+        always {
+            cleanWs()
+            sh "docker system prune -f --volumes"
+            sh 'gcloud auth revoke $CLIENT_EMAIL'
+        }
+    }   
+}
