@@ -4,31 +4,32 @@ pipeline {
     agent any
 
     environment {
-        APP_NAME = 'aline-bank-mg'
-        APP_VERSION = '0.0.1'
         AWS_CREDENTIALS = credentials('jenkins')
-        AWS_DEFAULT_REGION = 'us-east-1'
-        ECR_URI = 'public.ecr.aws/g1f2x9l3'
+        AWS_DEFAULT_REGION = '${AWS_DEFAULT_REGION}'
+        IMAGE_REPO = '${AWS_REPO}'
+        IMAGE_NAME = 'aline-bank-mg'
+        BUILD_ID = '0.0.1'
     }
 
     stages {
-    
-
         stage('Get AWS Credentials') {
             steps {
                 sh """
                     aws ecr-public get-login-password --region ${AWS_DEFAULT_REGION} |\
-                     docker login --username AWS --password-stdin ${ECR_URI}
+                     docker login --username AWS --password-stdin ${IMAGE_REPO}
                 """
             }
         }
-
+        stage("Init Submodules ") {
+            steps {
+                checkout scm
+            }
+        }
         stage("Initialize SubModules") {
             steps {
                 sh 'git submodule update --init'
             }
         }
-
         stage("SonarQube Test") {
             steps {
               withSonarQubeEnv('SonarQube') {
@@ -36,14 +37,6 @@ pipeline {
                 }
             }
         }
-
-        stage("Maven Build") {
-            steps {
-                sh 'mvn -B clean package -DskipTests'
-            }
-        }              sh 'git submodule update --init'
-
-
         stage('Build Image'){
             steps{
                 // get microservice name and version from pom.xml, then build image
@@ -55,27 +48,23 @@ pipeline {
                         --build-arg NAME=\${MODULE} \
                         --build-arg VERSION=\${VERSION} \
                         --build-arg DIR=\${MODULE} \
-                        -t ${APP_NAME}:${APP_VERSION}
+                        -t ${IMAGE_NAME}:${BUILD_ID}
                 """
             }
         }
-
-
         stage('Deploy to ECR'){
             steps{
                 // create repo if it doesn't already exist
                 sh """
-                    aws ecr-public create-repository --repository-name ${APP_NAME} || true
+                    aws ecr-public create-repository --repository-name ${IMAGE_NAME} || true
                 """
                 // add repo tag and push to aws
                 sh """
-                    docker tag ${APP_NAME}:${APP_VERSION} ${ECR_URI}/${APP_NAME}:${APP_VERSION}
-                    docker push ${ECR_URI}/${APP_NAME} --all-tags
+                    docker tag ${IMAGE_NAME}:${BUILD_ID} ${IMAGE_REPO}/${IMAGE_NAME}:${BUILD_ID}
+                    docker push ${IMAGE_REPO}/${IMAGE_NAME} --all-tags
                 """
             }
         }
-
-
         stage('Remove Local Images') {
             steps {
                 echo '=== Delete the local docker images ==='
@@ -84,16 +73,12 @@ pipeline {
                 }
             }
         }
-
     }
-
-
     post {
         always {
+            cleanWs()
             sh "mvn clean"
-            sh "docker system prune -f"
+            sh "docker system prune -f --volumes"
         }
     }
-
-
 }

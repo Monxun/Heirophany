@@ -1,0 +1,40 @@
+pipeline {
+  agent any
+  environment {
+    CLOUDSDK_CORE_PROJECT='x:y'
+    CLIENT_EMAIL='a@a.com'
+    GCLOUD_CREDS=credentials('gcloud-creds')
+  }
+  stages {
+    stage('clean workspace') {
+      steps {
+        cleanWs()
+      }
+    }
+    stage('AUTH W/ CREDENTIALS MANAGER ENVIRONMENT GCP') {
+      steps {
+        sh '''
+          gcloud version
+          gcloud auth activate-service-account --key-file="$GCLOUD_CREDS"
+          gcloud compute zones list
+        '''
+      }
+    }
+     stage('AUTH W/ SPECIFIC CREDENTIALS GCP') {
+      steps {
+        withCredentials([file(credentialsId: 'gcloud-creds', variable: 'GCLOUD_CREDS')]) {
+          sh '''
+            gcloud version
+            gcloud auth activate-service-account --key-file="$GCLOUD_CREDS"
+            gcloud compute zones list
+          '''
+        }
+      }
+    }
+  }
+  post {
+    always {
+      sh 'gcloud auth revoke $CLIENT_EMAIL'
+    }
+  }
+}

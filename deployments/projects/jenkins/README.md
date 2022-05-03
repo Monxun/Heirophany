@@ -143,6 +143,9 @@ ANSIBLE JENKINS CONFIG / GCP
 - CREATE PIPELINES WITH SCM AND WEBHOOKS 
 - CONFIGURE GITFLOWS FOR TESTING RESULTS / QUALITY GATES / APPROVAL AND REVIEW / ETC...
 
+https://www.youtube.com/watch?v=Zy_FQEYkaRw
+https://www.youtube.com/watch?v=xQ_yKp8SdDk&t=197s
+
 /////////////////////////////////////////////////////////////////////
 TERRAFORM JENKINS CONFIG / GCP
 ////////////////////////////////////////////////////////////////////

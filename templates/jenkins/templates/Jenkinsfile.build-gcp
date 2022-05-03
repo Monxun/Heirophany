@@ -1,12 +1,13 @@
 pipeline {
     agent any
     environment {
-        PROJECT_ID = '${GCP_PROJECT_ID}'
-        LOCATION = '${GCP_GKE_LOCATION}'
+        PROJECT_ID = '<<Your GCP Project ID>>'
+        CLUSTER_NAME = '<<Your GKE Cluster Name>>'
+        LOCATION = '<<Your GKE Cluster Location>>'
         GCLOUD_CREDS=credentials('gcloud-creds')
-        CLIENT_EMAIL = '${GCP_CLIENT_EMAIL}'
-        IMAGE_REPO = '${GCP_REPO}'
-        IMAGE_NAME = 'aline-bank-mg'
+        CLIENT_EMAIL = ''
+        IMAGE_REPO = ''
+        IMAGE_NAME = ''
         BUILD_ID = '0.1'
     }
     stages {
@@ -21,7 +22,6 @@ pipeline {
                 gcloud version
                 gcloud auth activate-service-account --key-file="$GCLOUD_CREDS"
                 gcloud compute zones list
-                gcloud config set project "${PROJECT_ID}"
                 '''
             }
         }
