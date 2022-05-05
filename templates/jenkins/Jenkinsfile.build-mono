@@ -1,0 +1,134 @@
+// DEVOPS CI PIPELINE CODE SCAN & IMAGE BUILD
+pipeline {
+    agent {
+        kubernetes {
+            yaml '''
+                apiVersion: v1
+                kind: Pod
+                spec:
+                containers:
+                - name: maven
+                    image: maven:alpine
+                    command:
+                    - cat
+                    tty: true
+                - name: node
+                    image: node:16-alpine3.12
+                    command:
+                    - cat
+                    tty: true
+            '''
+        }
+    }
+    environment {
+        CLOUD_PROVIDER = 'GCP/AWS'
+
+        // AWS VARIABLES
+        AWS_CREDENTIALS = credentials('aws-aline-jenkins')
+        AWS_DEFAULT_REGION = '${AWS_DEFAULT_REGION}'
+        IMAGE_REPO = '${AWS_IMAGE_REPO}'
+        IMAGE_NAME = 'aline-bank-mg'
+        BUILD_ID = '0.0.1'
+
+        // GCP VARIABLES
+    }
+    stages {
+        stage('PROVIDER AUTHENTICATION') {
+            when {
+                environment name: 'CLOUD_PROVIDER', value: 'AWS'
+            }
+            steps {
+                sh """
+                    aws ecr-public get-login-password --region ${AWS_DEFAULT_REGION} |\
+                    docker login --username AWS --password-stdin ${IMAGE_REPO}
+                """
+            }
+            when {
+                environment name: 'CLOUD_PROVIDER', value: 'GCP'
+            }
+            steps {
+                sh '''
+                    gcloud version
+                    gcloud auth activate-service-account --key-file="$GCLOUD_CREDS"
+                    gcloud compute zones list
+                    gcloud config set project "${PROJECT_ID}"
+                '''
+            }
+        }
+        stage("Init Submodules ") {
+            steps {
+                checkout scm
+            }
+        }
+        stage("Initialize SubModules") {
+            steps {
+                sh 'git submodule update --init'
+            }
+        }
+        stage("SonarQube Test") {
+            steps {
+              withSonarQubeEnv('SonarQube') {
+                sh 'mvn -B -DskipTests clean package sonar:sonar'
+                }
+            }
+        }
+        stage('Build Image'){
+            steps{
+                // get microservice name and version from pom.xml, then build image
+                sh """
+                    VERSION=\$(grep -m 1 "<version>" pom.xml | awk -F'[><]' \'{print \$3}\')
+                    echo \$VERSION
+                    MODULE=\$(grep -m 2 "<module>" pom.xml | tail -1 | awk -F'[><]' \'{print \$3}\')
+                    docker build . \
+                        --build-arg NAME=\${MODULE} \
+                        --build-arg VERSION=\${VERSION} \
+                        --build-arg DIR=\${MODULE} \
+                        -t ${IMAGE_NAME}:${BUILD_ID}
+                """
+            }
+        }
+        stage('PUSH IMAGE TO REPO') {
+            when {
+                environment name: 'CLOUD_PROVIDER', value: 'AWS'
+            }
+            steps {
+                // create ECR repo if it doesn't already exist
+                sh """
+                    aws ecr-public create-repository --repository-name ${IMAGE_NAME} || true
+                """
+                // add repo tag and push to aws
+                sh """
+                    docker tag ${IMAGE_NAME}:${BUILD_ID} ${IMAGE_REPO}/${IMAGE_NAME}:${BUILD_ID}
+                    docker push ${IMAGE_REPO}/${IMAGE_NAME} --all-tags
+                """
+            }
+            when {
+                environment name: 'CLOUD_PROVIDER', value: 'GCP'
+            }
+            steps {
+                sh '''
+                    gcloud version
+                    gcloud auth activate-service-account --key-file="$GCLOUD_CREDS"
+                    gcloud compute zones list
+                    gcloud config set project "${PROJECT_ID}"
+                '''
+            }
+            
+        }
+        stage('Remove Local Images') {
+            steps {
+                echo '=== Delete the local docker images ==='
+                script {
+                    sh("docker rmi -f ${IMAGE_REPO}/${IMAGE_NAME}:${BUILD_ID} || :")
+                }
+            }
+        }
+    }
+    post {
+        always {
+            cleanWs()
+            sh "mvn clean"
+            sh "docker system prune -f --volumes"
+        }
+    }
+}
