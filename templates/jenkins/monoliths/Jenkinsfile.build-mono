@@ -2,6 +2,7 @@
 pipeline {
     agent {
         kubernetes {
+            // USE JENKINS-SONARQUBE AGENT IMAGE + MAVEN
             yaml '''
                 apiVersion: v1
                 kind: Pod
@@ -21,18 +22,50 @@ pipeline {
         }
     }
     environment {
+        // CONFIGURATION VARIABLES
         CLOUD_PROVIDER = 'GCP/AWS'
-
-        // AWS VARIABLES
-        AWS_CREDENTIALS = credentials('aws-aline-jenkins')
-        AWS_DEFAULT_REGION = '${AWS_DEFAULT_REGION}'
         IMAGE_REPO = '${AWS_IMAGE_REPO}'
         IMAGE_NAME = 'aline-bank-mg'
         BUILD_ID = '0.0.1'
 
+        // AWS VARIABLES
+        AWS_CREDENTIALS = credentials('aws-aline-jenkins')
+        AWS_DEFAULT_REGION = '${AWS_DEFAULT_REGION}'
+
         // GCP VARIABLES
+        GCLOUD_CREDS=credentials('gcp-aline-jenkins')
+        PPROJECT_ID = '${GCP_PROJECT_ID}'
+        LOCATION = '${GCP_GKE_LOCATION}'
+        CLIENT_EMAIL = '${GCP_CLIENT_EMAIL}'
     }
     stages {
+        stage('SET BRANCH ENV') {
+            // DETECTS BRANCH FOR USE IN IMAGE NAME
+            when {
+                branch 'dev'
+            }
+            steps {
+                sh """
+                    export BUILD_BRANCH='dev'
+                """
+            }
+            when {
+                branch 'stage'
+            }
+            steps {
+                sh """
+                    export BUILD_BRANCH='stage'
+                """
+            }
+            when {
+                branch 'prod'
+            }
+            steps {
+                sh """
+                    export BUILD_BRANCH='prod'
+                """
+            }
+        }
         stage('PROVIDER AUTHENTICATION') {
             when {
                 environment name: 'CLOUD_PROVIDER', value: 'AWS'
@@ -83,7 +116,7 @@ pipeline {
                         --build-arg NAME=\${MODULE} \
                         --build-arg VERSION=\${VERSION} \
                         --build-arg DIR=\${MODULE} \
-                        -t ${IMAGE_NAME}:${BUILD_ID}
+                        -t ${BUILD_BRANCH}-${IMAGE_NAME}:${BUILD_ID}
                 """
             }
         }
@@ -94,24 +127,22 @@ pipeline {
             steps {
                 // create ECR repo if it doesn't already exist
                 sh """
-                    aws ecr-public create-repository --repository-name ${IMAGE_NAME} || true
+                    aws ecr-public create-repository --repository-name ${BUILD_BRANCH}-${IMAGE_NAME} || true
                 """
                 // add repo tag and push to aws
                 sh """
-                    docker tag ${IMAGE_NAME}:${BUILD_ID} ${IMAGE_REPO}/${IMAGE_NAME}:${BUILD_ID}
-                    docker push ${IMAGE_REPO}/${IMAGE_NAME} --all-tags
+                    docker tag ${BUILD_BRANCH}-${IMAGE_NAME}:${BUILD_ID} ${IMAGE_REPO}/${BUILD_BRANCH}-${IMAGE_NAME}:${BUILD_ID}
+                    docker push ${IMAGE_REPO}/${BUILD_BRANCH}-${IMAGE_NAME} --all-tags
                 """
             }
             when {
                 environment name: 'CLOUD_PROVIDER', value: 'GCP'
             }
             steps {
-                sh '''
-                    gcloud version
-                    gcloud auth activate-service-account --key-file="$GCLOUD_CREDS"
-                    gcloud compute zones list
-                    gcloud config set project "${PROJECT_ID}"
-                '''
+                sh """
+                    docker tag ${IMAGE_NAME}:${BUILD_ID} ${IMAGE_REPO}/${IMAGE_NAME}:${BUILD_ID}
+                    docker push ${IMAGE_REPO}/${BUILD_BRANCH}-${IMAGE_NAME} --all-tags
+                """
             }
             
         }
@@ -119,7 +150,7 @@ pipeline {
             steps {
                 echo '=== Delete the local docker images ==='
                 script {
-                    sh("docker rmi -f ${IMAGE_REPO}/${IMAGE_NAME}:${BUILD_ID} || :")
+                    sh("docker rmi -f ${IMAGE_REPO}/${BUILD_BRANCH}-${IMAGE_NAME}:${BUILD_ID} || :")
                 }
             }
         }

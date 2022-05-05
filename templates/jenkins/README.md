@@ -14,3 +14,6 @@ BARE-METAL:
 
 1. Create Templates For Both Cloud Providers
 2. Test Pipelines
+
+* TRY CONFIGURING KUBERNETES BUILD PODS USING CUSTOM AGENT DOCKERFILES
+https://devopscube.com/jenkins-build-agents-kubernetes/
