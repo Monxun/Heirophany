@@ -1,16 +1,32 @@
 // DEVOPS CI PIPELINE CODE SCAN & IMAGE BUILD
 pipeline {
-
-    agent any
-
+    agent {
+        kubernetes {
+            yaml '''
+                apiVersion: v1
+                kind: Pod
+                spec:
+                containers:
+                - name: maven
+                    image: maven:alpine
+                    command:
+                    - cat
+                    tty: true
+                - name: node
+                    image: node:16-alpine3.12
+                    command:
+                    - cat
+                    tty: true
+            '''
+        }
+    }
     environment {
-        AWS_CREDENTIALS = credentials('aws-jenkins')
+        AWS_CREDENTIALS = credentials('aws-aline-jenkins')
         AWS_DEFAULT_REGION = '${AWS_DEFAULT_REGION}'
-        IMAGE_REPO = '${AWS_REPO}'
+        IMAGE_REPO = '${AWS_IMAGE_REPO}'
         IMAGE_NAME = 'aline-bank-mg'
         BUILD_ID = '0.0.1'
     }
-
     stages {
         stage('Get AWS Credentials') {
             steps {
@@ -69,7 +85,7 @@ pipeline {
             steps {
                 echo '=== Delete the local docker images ==='
                 script {
-                    sh("docker rmi -f ${ECR_URI}/${APP_NAME}:${APP_VERSION} || :")
+                    sh("docker rmi -f ${IMAGE_REPO}/${IMAGE_NAME}:${BUILD_ID} || :")
                 }
             }
         }

@@ -1,11 +1,31 @@
+// DEVOPS CI PIPELINE CODE SCAN & IMAGE BUILD
 pipeline {
-    agent any
+    agent {
+        kubernetes {
+            yaml '''
+                apiVersion: v1
+                kind: Pod
+                spec:
+                containers:
+                - name: maven
+                    image: maven:alpine
+                    command:
+                    - cat
+                    tty: true
+                - name: node
+                    image: node:16-alpine3.12
+                    command:
+                    - cat
+                    tty: true
+            '''
+        }
+    }
     environment {
         PROJECT_ID = '${GCP_PROJECT_ID}'
         LOCATION = '${GCP_GKE_LOCATION}'
-        GCLOUD_CREDS=credentials('gcloud-creds')
+        GCLOUD_CREDS=credentials('aline-jenkins-gcp')
         CLIENT_EMAIL = '${GCP_CLIENT_EMAIL}'
-        IMAGE_REPO = '${GCP_REPO}'
+        IMAGE_REPO = '${GCP_IMAGE_REPO}'
         IMAGE_NAME = 'aline-bank-mg'
         BUILD_ID = '0.1'
     }

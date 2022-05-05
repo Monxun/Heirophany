@@ -1,20 +1,37 @@
+// DEVOPS CI PIPELINE PROVISION RESOURCES
 pipeline {
-    agent any
+    agent {
+        kubernetes {
+            yaml '''
+                apiVersion: v1
+                kind: Pod
+                spec:
+                containers:
+                - name: maven
+                    image: maven:alpine
+                    command:
+                    - cat
+                    tty: true
+                - name: node
+                    image: node:16-alpine3.12
+                    command:
+                    - cat
+                    tty: true
+            '''
+        }
+    }
     environment {
         PROJECT_ID = '${GCP_PROJECT_ID}'
         LOCATION = '${GCP_GKE_LOCATION}'
-        GCLOUD_CREDS=credentials('gcloud-creds')
+        GCLOUD_CREDS=credentials('aline-jenkins-gcp')
         CLIENT_EMAIL = '${GCP_CLIENT_EMAIL}'
-        IMAGE_REPO = '${GCP_REPO}'
-        HELM_REPO ='${AWS_HELM_REPO}'
-        HELM_BUILD = true
-        SIDECAR_INSTALL = true
+        TF_STATE = '${GCP_TF_STATE}'
         BUILD_ID = '0.1'
     }
     stages {
         stage('clean workspace') {
             steps {EKS
-                cleanWs()
+                cleanWs()AWS_TF_STATE
             }
         }
         stage('AUTH W/ CREDENTIALS MANAGER ENVIRONMENT GCP') {
