@@ -36,6 +36,7 @@ pipeline {
         GCLOUD_CREDS=credentials('gcp-aline-jenkins')
         PPROJECT_ID = '${GCP_PROJECT_ID}'
         LOCATION = '${GCP_GKE_LOCATION}'
+        IMAGE_REPO_REGION = '${GCP_IMAGE_REPO_REGION}'
         CLIENT_EMAIL = '${GCP_CLIENT_EMAIL}'
     }
     stages {
@@ -83,6 +84,7 @@ pipeline {
                 sh '''
                     gcloud version
                     gcloud auth activate-service-account --key-file="$GCLOUD_CREDS"
+                    gcloud auth configure-docker ${IMAGE_REPO_REGION}-docker.pkg.dev
                     gcloud compute zones list
                     gcloud config set project "${PROJECT_ID}"
                 '''
