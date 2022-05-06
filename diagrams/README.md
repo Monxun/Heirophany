@@ -4,7 +4,7 @@
 - Branches -> CI/CD (GITOPS) DONE!
 - Jenkins Pipeline Structure (DEVOPS) DONE!
 
-- Secrets -> CI/CD (SECOPS)
+- Secrets -> CI/CD (SECOPS) DONE!
 - Sidecar / Service Mesh
 
 - Deployment Infrastructure (GCS, EKS, COMPUTE, GKE)
