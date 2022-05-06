@@ -8,8 +8,8 @@ pipeline {
                 kind: Pod
                 spec:
                 containers:
-                - name: maven
-                    image: maven:alpine
+                - name: jenkins-sonarqube-agent
+                    image: us-east1-docker.pkg.dev/aline-jenkins-gcp/nightwalkers-images/jenkins-sonarqube-agent:latest
                     command:
                     - cat
                     tty: true

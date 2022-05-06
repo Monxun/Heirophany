@@ -2,12 +2,11 @@ FROM dwolla/jenkins-agent-core:alpine
 
 ENV SONAR_RUNNER_HOME=/usr/lib/sonar-scanner
 ENV SONAR_SCANNER_VERSION=4.4.0.2170
-ENV DEPENDENCY_CHECK_VERSION=5.3.2
 
 USER root
 WORKDIR /opt/
 
-RUN apk add --no-cache curl ruby ruby-etc ruby-rdoc grep sed unzip nodejs npm bash shadow && \
+RUN apk add --no-cache curl ruby ruby-etc ruby-rdoc grep sed unzip nodejs npm bash shadow mvn && \
     npm install -g typescript && \
     gem install bundler-audit bundler && \
     bundle audit update && \
