@@ -66,11 +66,11 @@ Step 4: Create Subnet and Cluster in Project VPC
 
 Step 5: Push Images to Artifact Repository
 
-(IMAGE NAME FORMAT: us-east--docker.pkg.dev/aline-jenkins-gcp/nightwalkers-images/your-image-name)
+(IMAGE NAME FORMAT: us-east1-docker.pkg.dev/aline-jenkins-gcp/nightwalkers-images/your-image-name)
 
     `gcloud auth login`
 
-    `docker tag <my-docker-image> us-east--docker.pkg.dev/aline-jenkins-gcp/nightwalkers-images/<your-image-name>`
+    `docker tag <my-docker-image> us-east1-docker.pkg.dev/aline-jenkins-gcp/nightwalkers-images/<your-image-name>`
 
 
 # CICD CONFIGURATION
