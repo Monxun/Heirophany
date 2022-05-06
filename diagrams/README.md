@@ -1,8 +1,8 @@
 # DIAGRAMS
 
 # TODO
-- Branches -> CI/CD (GITOPS)
-- Jenkins Pipeline Structure (DEVOPS)
+- Branches -> CI/CD (GITOPS) DONE!
+- Jenkins Pipeline Structure (DEVOPS) DONE!
 
 - Secrets -> CI/CD (SECOPS)
 - Sidecar / Service Mesh
