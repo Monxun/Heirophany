@@ -53,6 +53,8 @@ Step 3: Create Project
 
     `gcloud projects create $PROJECT_ID --name=$PROJECT_ID --set-as-default`
 
+    `gcloud config set project $PROJECT_ID`
+
 
 Step 4: Create Subnet and Cluster in Project VPC
 
