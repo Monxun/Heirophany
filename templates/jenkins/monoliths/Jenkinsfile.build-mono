@@ -9,7 +9,7 @@ pipeline {
                 spec:
                 containers:
                 - name: jenkins-sonarqube-agent
-                    image: us-east1-docker.pkg.dev/aline-jenkins-gcp/nightwalkers-images/jenkins-sonarqube-agent:0.0.1
+                    image: ${GCP_IMAGE_REPO}/jenkins-sonarqube-agent:0.0.1
                     command:
                     - cat
                     tty: true
@@ -22,6 +22,7 @@ pipeline {
         IMAGE_REPO = '${AWS_IMAGE_REPO}'
         IMAGE_NAME = 'aline-bank-mg'
         BUILD_ID = '0.0.1'
+        DEPLOYMENT = false
     
         // AWS VARIABLES
         AWS_CREDENTIALS = credentials('aws-aline-jenkins')
@@ -147,6 +148,7 @@ pipeline {
             // DETECTS BRANCH FOR USE IN IMAGE NAME
             when {
                 branch 'dev'
+                environment name: 'DEPLOYMENT', value: true
             }
             steps {
                 sh """
@@ -155,6 +157,7 @@ pipeline {
             }
             when {
                 branch 'stage'
+                environment name: 'DEPLOYMENT', value: true
             }
             steps {
                 sh """
@@ -163,6 +166,7 @@ pipeline {
             }
             when {
                 branch 'prod'
+                environment name: 'DEPLOYMENT', value: true
             }
             steps {
                 sh """
