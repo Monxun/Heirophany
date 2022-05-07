@@ -1,21 +1,11 @@
-FROM dwolla/jenkins-agent-core:alpine
+FROM dwolla/jenkins-agent-sonar-scanner:latest
 
 ENV SONAR_RUNNER_HOME=/usr/lib/sonar-scanner
-ENV SONAR_SCANNER_VERSION=4.4.0.2170
 
 USER root
 WORKDIR /opt/
 
-RUN apk add --no-cache curl ruby ruby-etc ruby-rdoc grep sed unzip nodejs npm bash shadow mvn && \
-    npm install -g typescript && \
-    gem install bundler-audit bundler && \
-    bundle audit update && \
-    curl -o ./sonarscanner.zip -L https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SONAR_SCANNER_VERSION}-linux.zip && \
-    unzip sonarscanner.zip && \
-    rm sonarscanner.zip  && \
-    mv sonar-scanner-${SONAR_SCANNER_VERSION}-linux ${SONAR_RUNNER_HOME} && \
-    ln -s ${SONAR_RUNNER_HOME}/bin/sonar-scanner /usr/local/bin/sonar-scanner && \
-    sed -i 's/use_embedded_jre=true/use_embedded_jre=false/g' /usr/lib/sonar-scanner/bin/sonar-scanner
+RUN apk add --no-cache aws-cli mvn
 
 COPY sonar-runner.properties ${SONAR_RUNNER_HOME}/conf/sonar-scanner.properties
 
