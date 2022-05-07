@@ -9,7 +9,7 @@ pipeline {
                 spec:
                 containers:
                 - name: jenkins-sonarqube-agent
-                    image: ${GCP_IMAGE_REPO}/jenkins-sonarqube-agent:0.0.1
+                    image: dwolla/jenkins-agent-sonar-scanner
                     command:
                     - cat
                     tty: true
@@ -151,8 +151,10 @@ pipeline {
                 environment name: 'DEPLOYMENT', value: true
             }
             steps {
+                // DEPLOY TO ECS
                 sh """
-                    // DEPLOY TO ECS
+                    docker --version
+                    docker compose version 
                 """
             }
             when {
