@@ -2,7 +2,7 @@
 pipeline {
     agent {
         kubernetes {
-            // USE JENKINS-SONARQUBE AGENT IMAGE + MAVEN
+            // USE JENKINS-ANSIBLE-TERRAFORM AGENT IMAGE 
             yaml '''
                 apiVersion: v1
                 kind: Pod
@@ -23,9 +23,8 @@ pipeline {
     }
     environment {
         // CONFIGURATION VARIABLES
-        CLOUD_PROVIDER = 'GCP/AWS'
-        IMAGE_REPO = '${AWS_IMAGE_REPO}'
-        IMAGE_NAME = 'aline-bank-mg'
+        // CLOUD_PROVIDER = 'GCP/AWS'
+        IMAGE_REPO = '${GCP_IMAGE_REPO}'
         BUILD_ID = '0.0.1'
 
         // AWS VARIABLES
@@ -37,35 +36,21 @@ pipeline {
         PPROJECT_ID = '${GCP_PROJECT_ID}'
         LOCATION = '${GCP_GKE_LOCATION}'
         CLIENT_EMAIL = '${GCP_CLIENT_EMAIL}'
+
+        // ECS VARIABLES
+        POM_VERSION = getVersion()
+        JAR_NAME = getJarName()
+        AWS_ECR_REGION = 'eu-west-1'
+        AWS_ECS_SERVICE = 'ch-dev-user-api-service'
+        AWS_ECS_TASK_DEFINITION = 'ch-dev-user-api-taskdefinition'
+        AWS_ECS_COMPATIBILITY = 'FARGATE'
+        AWS_ECS_NETWORK_MODE = 'awsvpc'
+        AWS_ECS_CPU = '256'
+        AWS_ECS_MEMORY = '512'
+        AWS_ECS_CLUSTER = 'ch-dev'
+        AWS_ECS_TASK_DEFINITION_PATH = './ecs/container-definition-update-image.json'
     }
     stages {
-        stage('SET BRANCH ENV') {
-            // DETECTS BRANCH FOR USE IN IMAGE NAME
-            when {
-                branch 'dev'
-            }
-            steps {
-                sh """
-                    export BUILD_BRANCH='dev'
-                """
-            }
-            when {
-                branch 'stage'
-            }
-            steps {
-                sh """
-                    export BUILD_BRANCH='stage'
-                """
-            }
-            when {
-                branch 'prod'
-            }
-            steps {
-                sh """
-                    export BUILD_BRANCH='prod'
-                """
-            }
-        }
         stage('PROVIDER AUTHENTICATION') {
             when {
                 environment name: 'CLOUD_PROVIDER', value: 'AWS'
@@ -88,77 +73,61 @@ pipeline {
                 '''
             }
         }
-        stage("Init Submodules ") {
-            steps {
-                checkout scm
+        stage('DEPLOY') {
+            // DETECTS BRANCH FOR USE IN IMAGE NAME
+            when {
+                branch 'dev'
+                environment name: 'CLOUD_PROVIDER', value: 'AWS'
+                environment name: 'DEPLOYMENT', value: true
             }
-        }
-        stage("Initialize SubModules") {
             steps {
-                sh 'git submodule update --init'
-            }
-        }
-        stage("SonarQube Test") {
-            steps {
-              withSonarQubeEnv('SonarQube') {
-                sh 'mvn -B -DskipTests clean package sonar:sonar'
-                }
-            }
-        }
-        stage('Build Image'){
-            steps{
-                // get microservice name and version from pom.xml, then build image
+                // DEPLOY TO ECS
                 sh """
-                    VERSION=\$(grep -m 1 "<version>" pom.xml | awk -F'[><]' \'{print \$3}\')
-                    echo \$VERSION
-                    MODULE=\$(grep -m 2 "<module>" pom.xml | tail -1 | awk -F'[><]' \'{print \$3}\')
-                    docker build . \
-                        --build-arg NAME=\${MODULE} \
-                        --build-arg VERSION=\${VERSION} \
-                        --build-arg DIR=\${MODULE} \
-                        -t ${BUILD_BRANCH}-${IMAGE_NAME}:${BUILD_ID}
+                    docker --version
+                    docker compose version 
+                    docker context create ecs dev-aline
+
+                    /usr/local/bin/aws ecs register-task-definition --region ${AWS_ECR_REGION} --family ${AWS_ECS_TASK_DEFINITION} --execution-role-arn ${AWS_ECS_EXECUTION_ROL} --requires-compatibilities ${AWS_ECS_COMPATIBILITY} --network-mode ${AWS_ECS_NETWORK_MODE} --cpu ${AWS_ECS_CPU} --memory ${AWS_ECS_MEMORY} --container-definitions file://${AWS_ECS_TASK_DEFINITION_PATH}
+                    def taskRevision = sh(script: "/usr/local/bin/aws ecs describe-task-definition --task-definition ${AWS_ECS_TASK_DEFINITION} | egrep \"revision\" | tr \"/\" \" \" | awk '{print \$2}' | sed 's/\"\$//'", returnStdout: true
+                    /usr/local/bin/aws ecs update-service --cluster ${AWS_ECS_CLUSTER} --service ${AWS_ECS_SERVICE} --task-definition ${AWS_ECS_TASK_DEFINITION}:${taskRevision}"
                 """
             }
-        }
-        stage('PUSH IMAGE TO REPO') {
+            when {
+                environment name: 'DEPLOYMENT', value: true
+            }
+            steps {
+                // DEPLOY
+                sh """
+                    build job: 'provision-aline', parameters: [string(name: 'CLOUD_PROVIDER', value: env.CLOUD_PROVIDER), string(name: 'BUILD_BRANCH', value: env.BUILD_BRANCH), string(name: 'DEPLOYMENT_TYPE', value: env.DEPLOYMENT_TYPE)]
+                """
+            }
             when {
                 environment name: 'CLOUD_PROVIDER', value: 'AWS'
+                environment name: 'DEPLOYMENT_TYPE', value: 'EKS'
+                environment name: 'DEPLOYMENT', value: true
             }
             steps {
-                // create ECR repo if it doesn't already exist
+                // DEPLOY TO EKS CLUSTER
                 sh """
-                    aws ecr-public create-repository --repository-name ${BUILD_BRANCH}-${IMAGE_NAME} || true
-                """
-                // add repo tag and push to aws
-                sh """
-                    docker tag ${BUILD_BRANCH}-${IMAGE_NAME}:${BUILD_ID} ${IMAGE_REPO}/${BUILD_BRANCH}-${IMAGE_NAME}:${BUILD_ID}
-                    docker push ${IMAGE_REPO}/${BUILD_BRANCH}-${IMAGE_NAME} --all-tags
+                    build job: 'provision-aline', parameters: [string(name: 'CLOUD_PROVIDER', value: env.CLOUD_PROVIDER), string(name: 'BUILD_BRANCH', value: env.BUILD_BRANCH), string(name: 'DEPLOYMENT_TYPE', value: env.DEPLOYMENT_TYPE)]
                 """
             }
             when {
                 environment name: 'CLOUD_PROVIDER', value: 'GCP'
+                environment name: 'DEPLOYMENT_TYPE', value: 'GKE'
+                environment name: 'DEPLOYMENT', value: true
             }
             steps {
+                // DEPLOY TO CLUSTER
                 sh """
-                    docker tag ${IMAGE_NAME}:${BUILD_ID} ${IMAGE_REPO}/${IMAGE_NAME}:${BUILD_ID}
-                    docker push ${IMAGE_REPO}/${BUILD_BRANCH}-${IMAGE_NAME} --all-tags
+                    build job: 'provision-aline', parameters: [string(name: 'CLOUD_PROVIDER', value: env.CLOUD_PROVIDER), string(name: 'BUILD_BRANCH', value: env.BUILD_BRANCH), string(name: 'DEPLOYMENT_TYPE', value: env.DEPLOYMENT_TYPE)]
                 """
-            }
-            
-        }
-        stage('Remove Local Images') {
-            steps {
-                echo '=== Delete the local docker images ==='
-                script {
-                    sh("docker rmi -f ${IMAGE_REPO}/${BUILD_BRANCH}-${IMAGE_NAME}:${BUILD_ID} || :")
-                }
             }
         }
     }
     post {
         always {
             cleanWs()
-            sh "mvn clean"
             sh "docker system prune -f --volumes"
         }
     }
