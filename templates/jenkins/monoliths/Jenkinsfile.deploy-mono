@@ -20,7 +20,7 @@ pipeline {
                     tty: true
             '''
         }
-    }
+    }google-cloud-cli-384.0.1-linux-x86_64.tar.gz
     environment {
         // CONFIGURATION VARIABLES
         // CLOUD_PROVIDER = 'GCP/AWS'
