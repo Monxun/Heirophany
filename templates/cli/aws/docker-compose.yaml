@@ -1,0 +1,57 @@
+version: '3'
+
+services:
+
+  # MICROSERVICES
+  aline-bank:
+    # image: ${ECR_URI}/aline-bank-mg:${APP_VERSION}
+    image: ${IMAGE_REPO}/dev-aline-bank-mg:latest
+    container_name: aline-bank
+    restart: always
+    ports:
+      - '8083:8083'
+    env_file: ./.env.docker-compose-aline
+    networks:
+      - aline
+
+  aline-transaction:
+    # image: ${ECR_URI}/aline-transaction-mg:${APP_VERSION}
+    image: ${IMAGE_REPO}/dev-aline-transaction-mg:latest
+    container_name: ms-transaction
+    # CAP RESTARTS
+    restart: always
+    ports:
+      - '8073:8073'
+    env_file: ./.env.docker-compose-aline
+    networks:
+      - aline
+
+  aline-underwriter:
+    # image: ${ECR_URI}/aline-underwriter-mg:${APP_VERSION}
+    image: ${IMAGE_REPO}/dev-aline-underwriter-mg:latest
+    container_name: ms-underwriter
+    restart: always
+    ports:
+      - '8071:8071'
+    env_file: ./.env.docker-compose-aline
+    networks:
+      - aline
+
+  aline-user:
+    # image: ${ECR_URI}/aline-user-mg:${APP_VERSION}
+    image: ${IMAGE_REPO}/dev-aline-user-mg:latest
+    container_name: ms-user
+    restart: always
+    ports:
+      - '8070:8070'
+    env_file: ./.env.docker-compose-aline
+    networks:
+      - aline
+
+networks:
+  aline:
+  
+
+
+
+  

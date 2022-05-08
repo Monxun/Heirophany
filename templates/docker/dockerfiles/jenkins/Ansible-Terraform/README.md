@@ -1,0 +1,6 @@
+# ANSIBLE-TERRAFORM JENKINS AGENT CONTAINER IMAGE
+
+BASE IMAGE: Jenkins-Agent / Jenkins-Ansible
+COPY: /ansible, /deployments
+COMMANDS: Install Terraform, AWS CLI, GCLOUD CLI
+USER: ANSIFORM
