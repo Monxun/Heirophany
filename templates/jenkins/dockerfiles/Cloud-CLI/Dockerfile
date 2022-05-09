@@ -4,5 +4,9 @@ USER root
 
 RUN apk update && \
     apk add --no-cache aws-cli && \
-    aws --version
+    apk add --update docker openrc && \
+    rc-update add docker boot && \
+    aws --version && \
+    gcloud --version && \
+    docker --version
 
