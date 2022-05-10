@@ -8,34 +8,76 @@ pipeline {
                 kind: Pod
                 spec:
                 containers:
-                - name: maven
-                    image: maven:alpine
+                - name: cloud-cli
+                  image: heirophany/cloud-cli:0.0.2
+                  command:
+                  - cat
+                  tty: true
+                  volumeMounts:
+                  - mountPath: /var/run/docker.sock
+                    name: docker-sock
+                - name: terraform
+                    image: hashicorp/terraform:0.12.13
                     command:
                     - cat
                     tty: true
-                - name: node
-                    image: node:16-alpine3.12
+                - name: ansible
+                    image: core.harbor.example.com/jenkins/ansible:2.9
                     command:
                     - cat
                     tty: true
+                    volumeMounts:
+                    - mountPath: "/etc/ssh-key"
+                    name: ssh-key
+                    readOnly: true
+                volumes:
+                - name: docker-sock
+                    hostPath:
+                        path: /var/run/docker.sock
+                - name: ssh-key
+                    secret:
+                    secretName: ansible-ssh-key
+                    defaultMode: 256
             '''
         }
-    }google-cloud-cli-384.0.1-linux-x86_64.tar.gz
+    }
     environment {
+        // CREDENTIALS
+        AWS_CREDENTIALS = credentials('aws-aline-jenkins')
+        GCLOUD_CREDS=credentials('gcp-aline-jenkins')
+        SONARQUBE_CREDS = credentials('sonarqube-token')
+
         // CONFIGURATION VARIABLES
-        // CLOUD_PROVIDER = 'GCP/AWS'
         IMAGE_REPO = '${GCP_IMAGE_REPO}'
         BUILD_ID = '0.0.1'
 
         // AWS VARIABLES
-        AWS_CREDENTIALS = credentials('aws-aline-jenkins')
         AWS_DEFAULT_REGION = '${AWS_DEFAULT_REGION}'
 
         // GCP VARIABLES
-        GCLOUD_CREDS=credentials('gcp-aline-jenkins')
-        PPROJECT_ID = '${GCP_PROJECT_ID}'
+        DEPLOYMENT_PROJECT_ID = '${GCP_DEPLOYMENT_PROJECT_ID}'
         LOCATION = '${GCP_GKE_LOCATION}'
         CLIENT_EMAIL = '${GCP_CLIENT_EMAIL}'
+
+        // DEPLOYMENT SCHEMA /////////////////////////////////
+
+        // DEV
+        DEV_ACTIVE = 'true'
+        DEV_CLOUD_PROVIDER = 'GCP'
+        DEV_DEPLOYMENT_TYPE = 'ECS'
+        DEV_NAMESPACE = 'dev'
+        // STAGE
+        STAGE_ACTIVE = 'false'
+        STAGE_CLOUD_PROVIDER = 'GCP'
+        STAGE_DEPLOYMENT_TYPE = ' GKE'
+        STAGE_NAMESPACE = 'stage'
+        // PROD
+        PROD_ACTIVE = 'false'
+        PROD_CLOUD_PROVIDER = 'GCP'
+        PROD_DEPLOYMENT_TYPE = 'GKE'
+        PROD_NAMESPACE = 'prod'
+
+        // AWS DEPLOYMENTS /////////////////////////////////
 
         // ECS VARIABLES
         POM_VERSION = getVersion()
@@ -49,86 +91,68 @@ pipeline {
         AWS_ECS_MEMORY = '512'
         AWS_ECS_CLUSTER = 'ch-dev'
         AWS_ECS_TASK_DEFINITION_PATH = './ecs/container-definition-update-image.json'
+        // EKS VARIABLES
+
+
+        // GCP DEPLOYMENTS /////////////////////////////////
+
+        // GCE VARIABLES
+        // GKE VARIABLES
     }
     stages {
-        stage('PROVIDER AUTHENTICATION') {
-            when {
-                environment name: 'CLOUD_PROVIDER', value: 'AWS'
-            }
-            steps {
-                sh """
-                    aws ecr-public get-login-password --region ${AWS_DEFAULT_REGION} |\
-                    docker login --username AWS --password-stdin ${IMAGE_REPO}
-                """
-            }
-            when {
-                environment name: 'CLOUD_PROVIDER', value: 'GCP'
-            }
-            steps {
-                sh '''
-                    gcloud version
-                    gcloud auth activate-service-account --key-file="$GCLOUD_CREDS"
-                    gcloud compute zones list
-                    gcloud config set project "${PROJECT_ID}"
-                '''
-            }
-        }
-        stage('DEPLOY') {
+        stage('DEPLOY DEV') {
             // DETECTS BRANCH FOR USE IN IMAGE NAME
-            when {
-                branch 'dev'
-                environment name: 'CLOUD_PROVIDER', value: 'AWS'
-                environment name: 'DEPLOYMENT', value: true
+            when { 
+                environment name: 'DEV_ACTIVE', value: 'true'
+                environment name: 'BUILD_BRANCH_NAME', value: 'dev'
             }
             steps {
-                // DEPLOY TO ECS
-                sh """
-                    docker --version
-                    docker compose version 
-                    docker context create ecs dev-aline
+                container('cloud-cli') {
+                    sh """
+                    #!/bin/bash
 
-                    /usr/local/bin/aws ecs register-task-definition --region ${AWS_ECR_REGION} --family ${AWS_ECS_TASK_DEFINITION} --execution-role-arn ${AWS_ECS_EXECUTION_ROL} --requires-compatibilities ${AWS_ECS_COMPATIBILITY} --network-mode ${AWS_ECS_NETWORK_MODE} --cpu ${AWS_ECS_CPU} --memory ${AWS_ECS_MEMORY} --container-definitions file://${AWS_ECS_TASK_DEFINITION_PATH}
-                    def taskRevision = sh(script: "/usr/local/bin/aws ecs describe-task-definition --task-definition ${AWS_ECS_TASK_DEFINITION} | egrep \"revision\" | tr \"/\" \" \" | awk '{print \$2}' | sed 's/\"\$//'", returnStdout: true
-                    /usr/local/bin/aws ecs update-service --cluster ${AWS_ECS_CLUSTER} --service ${AWS_ECS_SERVICE} --task-definition ${AWS_ECS_TASK_DEFINITION}:${taskRevision}"
+                    if [[ $DEV_CLOUD_PROVIDER -eq 'AWS' ]]
+                    then
+                        echo 'DEPLOYING TO AMAZON ECS VIA DOCKER COMPOSE'
+
+                        echo 'AUTHENTICATING...'
+                        aws ecr-public get-login-password --region ${AWS_DEFAULT_REGION} |\
+                        docker login --username AWS --password-stdin ${IMAGE_REPO}
+
+                        echo 'GETTING SECRETS...'
+
+                        echo 'CHECKING INFRASTRUCTURE...'
+
+                        echo 'CREATING ECS CONTEXT...'
+                        docker compose version 
+                        docker context create ecs dev-aline
+
+                        echo 'CREATING ECS TASK DEFINITION / SERVICE...'
+                        /usr/local/bin/aws ecs register-task-definition --region ${AWS_ECR_REGION} --family ${AWS_ECS_TASK_DEFINITION} --execution-role-arn ${AWS_ECS_EXECUTION_ROL} --requires-compatibilities ${AWS_ECS_COMPATIBILITY} --network-mode ${AWS_ECS_NETWORK_MODE} --cpu ${AWS_ECS_CPU} --memory ${AWS_ECS_MEMORY} --container-definitions file://${AWS_ECS_TASK_DEFINITION_PATH}
+                        def taskRevision = sh(script: "/usr/local/bin/aws ecs describe-task-definition --task-definition ${AWS_ECS_TASK_DEFINITION} | egrep \"revision\" | tr \"/\" \" \" | awk '{print \$2}' | sed 's/\"\$//'", returnStdout: true
+                        /usr/local/bin/aws ecs update-service --cluster ${AWS_ECS_CLUSTER} --service ${AWS_ECS_SERVICE} --task-definition ${AWS_ECS_TASK_DEFINITION}:${taskRevision}"
+                    
+                        echo 'DEPLOYING...'
+
+                        echo 'SUCCESS!' 
+                        echo 'AWS/ECS DEPLOYMENT'
+
+                    else
+                        echo 'DEPLOYING TO GOOGLE GCE VIA CLOUDCONFIG/CLOUDBUILD'
+
+                        echo 'AUTHENTICATING...'
+                        gcloud version
+                        gcloud auth activate-service-account --key-file="$GCLOUD_CREDS"
+                        gcloud compute zones list
+                        gcloud config set project "${DEPLOYMENT_PROJECT_ID}"
+
+                        echo 'GETTING SECRETS...'
+
+                        echo 'CHECKING INFRASTRUCTURE...'
+
+                    fi
                 """
             }
-            when {
-                environment name: 'DEPLOYMENT', value: true
-            }
-            steps {
-                // DEPLOY
-                sh """
-                    build job: 'provision-aline', parameters: [string(name: 'CLOUD_PROVIDER', value: env.CLOUD_PROVIDER), string(name: 'BUILD_BRANCH', value: env.BUILD_BRANCH), string(name: 'DEPLOYMENT_TYPE', value: env.DEPLOYMENT_TYPE)]
-                """
-            }
-            when {
-                environment name: 'CLOUD_PROVIDER', value: 'AWS'
-                environment name: 'DEPLOYMENT_TYPE', value: 'EKS'
-                environment name: 'DEPLOYMENT', value: true
-            }
-            steps {
-                // DEPLOY TO EKS CLUSTER
-                sh """
-                    build job: 'provision-aline', parameters: [string(name: 'CLOUD_PROVIDER', value: env.CLOUD_PROVIDER), string(name: 'BUILD_BRANCH', value: env.BUILD_BRANCH), string(name: 'DEPLOYMENT_TYPE', value: env.DEPLOYMENT_TYPE)]
-                """
-            }
-            when {
-                environment name: 'CLOUD_PROVIDER', value: 'GCP'
-                environment name: 'DEPLOYMENT_TYPE', value: 'GKE'
-                environment name: 'DEPLOYMENT', value: true
-            }
-            steps {
-                // DEPLOY TO CLUSTER
-                sh """
-                    build job: 'provision-aline', parameters: [string(name: 'CLOUD_PROVIDER', value: env.CLOUD_PROVIDER), string(name: 'BUILD_BRANCH', value: env.BUILD_BRANCH), string(name: 'DEPLOYMENT_TYPE', value: env.DEPLOYMENT_TYPE)]
-                """
-            }
-        }
-    }
-    post {
-        always {
-            cleanWs()
-            sh "docker system prune -f --volumes"
         }
     }
 }
