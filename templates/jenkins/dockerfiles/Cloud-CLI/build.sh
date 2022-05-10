@@ -2,7 +2,7 @@
 
 export IMAGE_NAME=cloud-cli
 export IMAGE_REPO=us-east1-docker.pkg.dev/aline-jenkins-gcp/nightwalkers-images
-export BUILD_ID=0.0.1
+export BUILD_ID=0.0.2
 
 # gcloud auth login
 # gcloud auth configure-docker \
