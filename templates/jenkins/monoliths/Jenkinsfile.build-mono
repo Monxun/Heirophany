@@ -155,11 +155,10 @@ pipeline {
             }
         }
     }
-    // post {
-    //     always {
-    //         cleanWs()
-    //         sh "mvn clean"
-    //         sh "docker system prune -f --volumes"
-    //     }
-    // }
+    post {
+        always {
+            sh "mvn clean"
+            sh "docker system prune -f --volumes"
+        }
+    }
 }
