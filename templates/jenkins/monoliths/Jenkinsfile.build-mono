@@ -142,7 +142,7 @@ pipeline {
             steps {
                 // TRIGGER DEPLOYMENT PIPELINE
                 sh """
-                    build job: 'deploy-aline', parameters: [string(name: 'CLOUD_PROVIDER', value: env.CLOUD_PROVIDER), string(name: 'BRANCH_NAME', value: env.BRANCH_NAME)]
+                    build job: 'aline-deployment', parameters: [string(name: 'CLOUD_PROVIDER', value: env.CLOUD_PROVIDER), string(name: 'BRANCH_NAME', value: env.BRANCH_NAME)]
                 """
             }
         }
