@@ -1,0 +1,4 @@
+appName: user
+appPort: 8070
+namespace: dev
+replicaCount: 1

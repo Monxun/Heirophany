@@ -1,0 +1,17 @@
+# VALUES
+tags:
+  ingress: true
+  configmap: true
+  secrets: true
+  namespaces: true
+
+# APP INFO
+appName: bank
+appVersion: 0.0.1
+appPort: 8083
+namespace: dev
+replicaCount: 1
+restartPolicy: Always
+
+# HOST ADDRESS FOR IMAGE REPOSITORY - DEPLOYMENT
+repoAddress: public.ecr.aws/g1f2x9l3

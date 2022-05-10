@@ -8,21 +8,23 @@ pipeline {
               kind: Pod
               spec:
                 containers:
-                - name: jenkins-sonarqube-agent
-                  image: heirophany/jenkins-sonarqube-agent:0.0.1
-                  command:
-                  - cat
-                  tty: true
                 - name: cloud-cli
-                  image: heirophany/cloud-cli:0.0.1
+                  image: heirophany/cloud-cli:0.0.2
                   command:
                   - cat
                   tty: true
+                  volumeMounts:
+                  - mountPath: /var/run/docker.sock
+                    name: docker-sock
                 - name: maven
                   image: maven:alpine
                   command:
                   - cat
                   tty: true
+                volumes:
+                  - name: docker-sock
+                    hostPath:
+                        path: /var/run/docker.sock
               '''
         }
     }
@@ -97,17 +99,19 @@ pipeline {
         }
         stage('Build Image'){
             steps {
-                // get microservice name and version from pom.xml, then build image
-                sh """
-                    VERSION=\$(grep -m 1 "<version>" pom.xml | awk -F'[><]' \'{print \$3}\')
-                    echo \$VERSION
-                    MODULE=\$(grep -m 2 "<module>" pom.xml | tail -1 | awk -F'[><]' \'{print \$3}\')
-                    docker build . \
-                        --build-arg NAME=\${MODULE} \
-                        --build-arg VERSION=\${VERSION} \
-                        --build-arg DIR=\${MODULE} \
-                        -t ${BRANCH_NAME}-${IMAGE_NAME}:${BUILD_ID}
-                """
+                container('cloud-cli') {
+                    // get microservice name and version from pom.xml, then build image
+                    sh """
+                        VERSION=\$(grep -m 1 "<version>" pom.xml | awk -F'[><]' \'{print \$3}\')
+                        echo \$VERSION
+                        MODULE=\$(grep -m 2 "<module>" pom.xml | tail -1 | awk -F'[><]' \'{print \$3}\')
+                        docker build . \
+                            --build-arg NAME=\${MODULE} \
+                            --build-arg VERSION=\${VERSION} \
+                            --build-arg DIR=\${MODULE} \
+                            -t ${BRANCH_NAME}-${IMAGE_NAME}:${BUILD_ID}
+                    """
+                }
             }
         }
         stage('CHECK/CREATE REPO AWS') {
@@ -123,11 +127,13 @@ pipeline {
         }
         stage('PUSH IMAGE TO REPO') {
             steps {
-                // add repo tag and push to aws
-                sh """
-                    docker tag ${BRANCH_NAME}-${IMAGE_NAME}:${BUILD_ID} ${IMAGE_REPO}/${BRANCH_NAME}-${IMAGE_NAME}:${BUILD_ID}
-                    docker push ${IMAGE_REPO}/${BRANCH_NAME}-${IMAGE_NAME} --all-tags
-                """
+                container('cloud-cli') {
+                    // add repo tag and push to aws
+                    sh """
+                        docker tag ${BRANCH_NAME}-${IMAGE_NAME}:${BUILD_ID} ${IMAGE_REPO}/${BRANCH_NAME}-${IMAGE_NAME}:${BUILD_ID}
+                        docker push ${IMAGE_REPO}/${BRANCH_NAME}-${IMAGE_NAME} --all-tags
+                    """
+                }
             }
         }
         stage('DEPLOY') {

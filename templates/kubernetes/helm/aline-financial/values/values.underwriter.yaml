@@ -1,0 +1,4 @@
+appName: underwriter
+appPort: 8071
+namespace: dev
+replicaCount: 1
