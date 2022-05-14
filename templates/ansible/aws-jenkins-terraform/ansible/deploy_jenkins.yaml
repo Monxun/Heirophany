@@ -1,0 +1,3 @@
+---
+- import_playbook: ./modules/jenkins-aws-playbook.yaml
+- import_playbook: ./modules/jenkins-aws-playbook.yaml

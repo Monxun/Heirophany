@@ -1,0 +1,10 @@
+---
+keypair: jce-ssh
+instance_type: t2.micro
+image: ami-00ee4df451840fa9d 
+wait: yes
+group: webserver
+count: 1
+region: us-west-2
+security_group_name: JCE-Ansible-Jenkins-Security-Group
+ec2_name: JCE-Ansible-EC2

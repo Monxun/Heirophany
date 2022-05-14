@@ -1,0 +1,29 @@
+---
+# Network Variables
+vpc_region: us-west-1
+vpc_east_name: jenkins-vpc-east
+vpc_west_name: jenkins-vpc-west
+
+# An admin password for Jenkins must be stored in AWS Systems Manager Parameter Store. 
+# This parameter must be of type SecureString and have the name jenkins-pwd.
+jenkins-pwd: p455w0rd
+
+# Backend TF State Variables
+backend_s3_bucket_name: jenkins-state-nightwalkers
+backend_s3_bucket_key: global/s3/terraform.tfstate
+backend_s3_region: us-west-1
+
+# Will initialize s3 bucket and dynamodb first BEFORE applying config.tf and modifying state to remote
+initial_provision: true
+
+
+
+keypair: jce-ssh
+instance_type: t2.micro
+image: ami-00ee4df451840fa9d 
+wait: yes
+group: webserver
+count: 1
+region: us-west-2
+security_group_name: JCE-Ansible-Jenkins-Security-Group
+ec2_name: JCE-Ansible-EC2
