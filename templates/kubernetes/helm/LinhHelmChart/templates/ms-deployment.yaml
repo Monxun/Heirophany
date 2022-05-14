@@ -1,0 +1,82 @@
+# Using helm -range function for loop to loop through each of the Deployment microservices.
+{{- range .Values.Services }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .name }}
+  labels: 
+    app: {{ .name }} 
+spec:
+  replicas: {{ .replicas }}
+  selector: 
+    matchLabels:
+      app: {{ .name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .name }}
+    spec:
+      restartPolicy: {{ .container.restartPolicy }}
+      containers:
+      - name: {{ .name }}
+        image: {{ .image }}
+        ports:
+        - containerPort: {{ .container.port }}
+        env:
+        - name: DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: appsecrets
+              key: DB_USERNAME
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: appsecrets
+              key: DB_PASSWORD
+        - name: DB_HOST
+          valueFrom:
+            secretKeyRef:
+              name: appsecrets
+              key: DB_HOST
+        - name: DB_PORT
+          valueFrom:
+            secretKeyRef:
+              name: appsecrets
+              key: DB_PORT
+        - name: APP_USER_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: appsecrets
+              key: APP_USER_ACCESS_KEY
+        - name: APP_USER_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: appsecrets
+              key: APP_USER_SECRET_KEY
+        - name: JWT_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: appsecrets
+              key: JWT_SECRET_KEY
+        - name: ENCRYPT_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: appsecrets
+              key: ENCRYPT_SECRET_KEY
+        envFrom:
+          - configMapRef:
+              name: ms-config
+        volumeMounts:
+          - name: appsecrets
+            mountPath: /mnt/secrets-store
+            readOnly: true
+      volumes:
+        - name: appsecrets
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: appsecrets
+---
+{{- end }}
+

@@ -4,6 +4,63 @@ tags:
   configmap: true
   secrets: true
   namespaces: true
+  csi-driver: true
+
+Secret:
+  Name: app-secrets-mg
+  SecretName: appsecrets
+  ARN: ${MG_SECRETS_ARN} # <-- hide this for capstone
+  Vars:
+    - DB_USERNAME
+    - DB_PASSWORD
+    - DB_HOST
+    - DB_PORT
+    - APP_USER_ACCESS_KEY
+    - APP_USER_SECRET_KEY
+    - JWT_SECRET_KEY
+    - ENCRYPT_SECRET_KEY
+    
+Services:
+  - name: ms-bank
+    image: ${AWS_ACCOUNT_NUMBER}.dkr.ecr.${ECR_REGION}.amazonaws.com/aline_bank_ln:aline_bank_ln-0.1.0_build_14
+    replicas: 1
+    container:
+      name: ms-bank
+      port: 8083
+      protocol: TCP
+      type: ClusterIP
+      restartPolicy: Always
+      path: '/(members|banks|branches).*'
+  - name: ms-transaction
+    image: ${AWS_ACCOUNT_NUMBER}.dkr.ecr.${ECR_REGION}.amazonaws.com/aline_transaction_ln:aline_transaction_ln-0.1.0_build_9
+    replicas: 1
+    container:
+      name: ms-transaction
+      port: 8073
+      protocol: TCP
+      type: ClusterIP
+      restartPolicy: Always
+      path: '/(transactions/?.*|(members|accounts)/.+/transactions)'
+  - name: ms-underwriter
+    image: ${AWS_ACCOUNT_NUMBER}.dkr.ecr.${ECR_REGION}.amazonaws.com/aline_underwriter_ln:aline_underwriter_ln-0.1.0_build_8
+    replicas: 1
+    container:
+      name: ms-underwriter
+      port: 8071
+      protocol: TCP
+      type: ClusterIP
+      restartPolicy: Always
+      path: '/(applicants|applications).*'
+  - name: ms-user
+    image: ${AWS_ACCOUNT_NUMBER}.dkr.ecr.${ECR_REGION}.amazonaws.com/aline_user_ln:aline_user_ln-0.1.0_build_9
+    replicas: 1
+    container:
+      name: ms-user
+      port: 8070
+      protocol: TCP
+      type: ClusterIP
+      restartPolicy: Always
+      path: '/(users|login).*'
 
 # APP INFO
 appName: bank

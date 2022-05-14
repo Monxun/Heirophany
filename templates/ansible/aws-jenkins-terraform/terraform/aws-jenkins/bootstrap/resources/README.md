@@ -18,10 +18,3 @@ terraform apply \
 ```
 2. The names of the state bucket and state lock table will be outputted after the successful apply. Take these values and use them in when deploying the serverless-jenkins module.
 
-
-
-# STEPS
-
-1. Perform terraform init/apply from /resources first
-2. Perform another terrafomr init/apply from the bootstrap directory to apply backend configuration
-

@@ -1,23 +1,16 @@
 ---
-- name: Provision S3 backend + DynamoDb table for state locking
-  hosts: localhost
-  connection: local
-  gather_facts: False
-  tags: provisioning
-  
+- hosts: localhost
+  become: false
+
   vars_files:
-    - ../vars/bootstrap_vars.yml
+  - ../vars/static_vars.yml
 
   tasks:
-
-    - name: Run Bootstrap Script
-      local_action: ec2_tag resource={{ item.id }} region={{ region }} state=present
-      with_items: "{{ ec2.instances }}"
-      args:
-        tags:
-          Name: "{{ ec2_name }}"
-    - name: Add Bootstrap Vars to Static / Add hosts if needed
-      add_host:
-        hostname: "{{ item.public_ip }}"
-        groupname: "{{ host_group_name }}"
-        with_items: "{{ ec2.instances }}"
+    - name: get Terraform networking variables
+      fetch_terraform_backend_outputs:
+        bucket: "jenkins-state-nightwalkers"
+        object: "eu-west-1/networking.tfstate"
+      register: networking
+    - name: filter vpc id
+      debug:
+        msg: "{{ networking.vars.katapult_cloud_vpc_id }}"
