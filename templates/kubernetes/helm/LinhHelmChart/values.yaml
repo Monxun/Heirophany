@@ -14,6 +14,7 @@ Secret:
 Services:
   - name: ms-bank
     image: ${AWS_ACCOUNT_NUMBER}.dkr.ecr.${ECR_REGION}.amazonaws.com/aline_bank_ln:aline_bank_ln-0.1.0_build_14
+    namespace: dev
     replicas: 1
     container:
       name: ms-bank

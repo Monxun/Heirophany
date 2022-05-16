@@ -1,38 +1,39 @@
+{{- range .Values.Services }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Values.appName }}
+  name: {{ .Values.name }}
   namespace: {{ .Values.namespace }}
 spec:
   ports:
-  - port: {{ .Values.appPort }}
-    targetPort: {{ .Values.appPort }}
-    protocol: TCP
-  type: ClusterIP
+  - port: {{ .Values.container.port }}
+    targetPort: {{ .Values.container.port }}
+    protocol: {{ .Values.container.protocol }}
+  type: {{ .Values.container.type }}
   selector:
-    app: {{ .Values.appName }}
+    app: {{ .Values.name }}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.appName }}
+  name: {{ .Values.name }}
   namespace: {{ .Values.namespace }}
   labels:
-    app: {{ .Values.appName }}
+    app: {{ .Values.name }}
 spec:
   selector:
     matchLabels:
-      app: {{ .Values.appName }}
+      app: {{ .Values.name }}
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        app: {{ .Values.appName }}
+        app: {{ .Values.name }}
     spec:
       containers:
-      - name: {{ .Values.appName }}
-        image: {{ .Values.repoAddress }}/aline-{{ .Values.appName }}-mg:{{ .Values.appVersion }}
+      - name: {{ .Values.name }}
+        image: {{ .Values.repoAddress }}/{{ .Values.namespace }}-aline-{{ .Values.name }}-mg:{{ .Values.appVersion }}
         # imagePullPolicy: Never
         envFrom:
           - configMapRef:
@@ -40,6 +41,8 @@ spec:
           - secretRef:
               name: aline-secrets
         ports:
-        - containerPort: {{ .Values.appPort }}
-          name: {{ .Values.appName }}
-      restartPolicy: {{ .Values.restartPolicy }}
+        - containerPort: {{ .Values.container.port }}
+          name: {{ .Values.name }}
+      restartPolicy: {{ .Values.container.restartPolicy }}
+---
+{{- end }}
