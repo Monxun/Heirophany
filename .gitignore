@@ -138,3 +138,8 @@ templates/terraform/examples/aws/serverless-jenkins-on-aws-fargate
 *.tfstate
 *.terraform/
 templates/ansible/aws-static/terraform/static/.terraform.lock.hcl
+templates/ansible/aws-static/terraform/backend/resources/.terraform.lock.hcl
+templates/ansible/aws-static/terraform/backend/.terraform.lock.hcl
+templates/ansible/aws-static/terraform/backend/tf.plan
+templates/ansible/aws-static/terraform/backend/resources/tf.plan
+templates/ansible/aws-static/terraform/static-old/.terraform.lock.hcl

@@ -1,0 +1,6 @@
+---
+# database role
+
+- hosts: database
+  roles:
+    - { role: database }

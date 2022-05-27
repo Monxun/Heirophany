@@ -1,0 +1,6 @@
+---
+# web role
+
+- hosts: web
+  roles:
+    - { role: web }
