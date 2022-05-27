@@ -1,4 +1,0 @@
-appName: bank
-appPort: 8083
-namespace: dev
-replicaCount: 1

@@ -1,0 +1,3 @@
+---
+- import_playbook: ./modules/bootstrap_tf-playbook.yaml
+- import_playbook: ./modules/static-aws-playbook.yaml

@@ -1,0 +1,14 @@
+---
+- name: Provision S3 backend + DynamoDb table for state locking
+  hosts: localhost
+  connection: local
+  gather_facts: False
+  tags: provisioning
+  
+  vars_files:
+    - ../vars/bootstrap_vars.yml
+
+  tasks:
+    - name: lookup secretsmanager secret in the current region
+        debug: msg="{{ lookup('amazon.aws.aws_secret', 'aline-financial-mg/microservice-secrets', bypath=true) }}"
+    # GRAB / EXPORT SECRETS FROM AWS

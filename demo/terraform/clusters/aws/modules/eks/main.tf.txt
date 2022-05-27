@@ -1,0 +1,4 @@
+module "eks" {
+    source = "./eks"
+    name = var.stack_name
+}

@@ -1,4 +1,0 @@
-appName: transaction
-appPort: 8073
-namespace: dev
-replicaCount: 1

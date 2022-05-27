@@ -1,5 +1,5 @@
 # VALUES
-namespace: dev
+namespace: ${BUILD_BRANCH}
 
 # INGRESS HOST ADDRESS
 hostname: localhost

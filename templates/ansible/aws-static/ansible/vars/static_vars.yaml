@@ -1,0 +1,14 @@
+---
+# Network Variables
+# vpc_region: us-west-1
+# vpc_jenkins_name: jenkins-vpc-east
+# vpc_rds_name: jenkins-vpc-west
+
+TF_VARS_SHARED_VPC_NAME : nightwalkers-vpc
+
+TF_VARS_DB_USERNAME: {{ lookup('amazon.aws.aws_secret', 'alinedbSecret', 'username') }}
+TF_VARS_DB_PASSWORD: {{ lookup('amazon.aws.aws_secret', 'alinedbSecret', 'password') }}
+TF_VARS_DB_ENGINE: {{ lookup('amazon.aws.aws_secret', 'alinedbSecret', 'engine') }}
+TF_VARS_DB_PORT: {{ lookup('amazon.aws.aws_secret', 'alinedbSecret', 'port') }}
+TF_VARS_DB_NAME: {{ lookup('amazon.aws.aws_secret', 'alinedbSecret', 'dbInstanceIdentifier') }}
+

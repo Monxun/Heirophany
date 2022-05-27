@@ -48,6 +48,7 @@ pipeline {
         CLIENT_EMAIL = '$GCP_CLIENT_EMAIL'
 
         SONARQUBE_CREDS = credentials('sonarqube-token')
+        
     }
     stages {
         stage('PROVIDER AUTHENTICATION AWS') {

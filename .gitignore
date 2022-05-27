@@ -134,3 +134,7 @@ templates/kubernetes/helm/aline-financial/charts/secrets/values.yaml
 templates/jenkins/repos/serverless-jenkins-on-aws-fargate
 templates/jenkins/repos/terraform-jenkins-aws-fargate
 templates/terraform/examples/aws/serverless-jenkins-on-aws-fargate
+
+*.tfstate
+*.terraform/
+templates/ansible/aws-static/terraform/static/.terraform.lock.hcl

@@ -1,0 +1,48 @@
+{{- range .Values.Services }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .name }}
+  namespace: dev  
+spec:
+  ports:
+  - port: {{ .container.port }}
+    targetPort: {{ .container.port }}
+    protocol: {{ .container.protocol }}
+  type: {{ .container.type }}
+  selector:
+    app: {{ .name }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .name }}
+  namespace: dev 
+  labels:
+    app: {{ .name }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .name }}
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: {{ .name }}
+    spec:
+      containers:
+      - name: {{ .name }}
+        image: us-east1-docker.pkg.dev/aline-jenkins-gcp/nightwalkers-images/dev-aline-{{ .name }}-mg:0.0.1
+        # imagePullPolicy: Never
+        envFrom:
+          - configMapRef:
+              name: aline-configmap
+          - secretRef:
+              name: aline-secrets
+        ports:
+        - containerPort: {{ .container.port }}
+          name: {{ .name }}
+      restartPolicy: {{ .container.restartPolicy }}
+---
+{{- end }}

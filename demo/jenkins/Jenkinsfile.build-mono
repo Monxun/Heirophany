@@ -1,0 +1,167 @@
+// DEVOPS CI PIPELINE CODE SCAN & IMAGE BUILD
+pipeline {
+    agent {
+        kubernetes {
+            // USE JENKINS-SONARQUBE AGENT IMAGE + MAVEN
+            yaml '''
+              apiVersion: v1
+              kind: Pod
+              spec:
+                containers:
+                - name: cloud-cli
+                  image: heirophany/cloud-cli:0.0.2
+                  command:
+                  - cat
+                  tty: true
+                  volumeMounts:
+                  - mountPath: /var/run/docker.sock
+                    name: docker-sock
+                - name: maven
+                  image: maven:alpine
+                  command:
+                  - cat
+                  tty: true
+                volumes:
+                  - name: docker-sock
+                    hostPath:
+                        path: /var/run/docker.sock
+              '''
+        }
+    }
+    environment {
+        // CREDENTIALS
+        AWS_CREDENTIALS = credentials('aws-aline-jenkins')
+        GCLOUD_CREDS=credentials('gcp-aline-jenkins')
+        SONARQUBE_CREDS = credentials('sonarqube-token')
+
+        // CONFIGURATION VARIABLES
+        CLOUD_PROVIDER = 'GCP'
+        IMAGE_REPO = '${GCP_IMAGE_REPO}'
+        IMAGE_NAME = 'aline-bank-mg'
+        BUILD_ID = '0.0.1'
+        UPDATE_DEPLOYMENT = true
+    
+        // AWS VARIABLES
+        AWS_DEFAULT_REGION = '${AWS_DEFAULT_REGION}'
+
+        // GCP VARIABLES
+        PROJECT_ID = '$GCP_JENKINS_PROJECT_ID'
+        LOCATION = '${GCP_GKE_LOCATION}'
+        IMAGE_REPO_REGION = '$GCP_IMAGE_REPO_REGION'
+        CLIENT_EMAIL = '$GCP_CLIENT_EMAIL'
+    }
+    stages {
+        stage('PROVIDER AUTHENTICATION AWS') {
+            // AUTHENTICATES INTO AWS
+            when { environment name: 'CLOUD_PROVIDER', value: 'AWS' }
+            steps {
+                container('cloud-cli') {
+                    sh """
+                    aws ecr-public get-login-password --region ${AWS_DEFAULT_REGION} |\
+                    docker login --username AWS --password-stdin ${IMAGE_REPO}
+                    """
+                }
+            }
+        }
+        stage('PROVIDER AUTHENTICATION GCP') {
+            // AUTHENTICATES INTO GCP
+            when { environment name: 'CLOUD_PROVIDER', value: 'GCP' }
+            steps {
+                container('cloud-cli') {
+                    sh """
+                    gcloud version
+                    gcloud auth activate-service-account --key-file="$GCLOUD_CREDS"
+                    gcloud auth configure-docker "$IMAGE_REPO_REGION"-docker.pkg.dev
+                    gcloud config set project "$PROJECT_ID"
+                    """
+                }
+            }
+        }
+        stage("Init Submodules ") {
+            steps {
+                checkout scm
+            }
+        }
+        stage("Initialize SubModules") {
+            steps {
+                sh 'git submodule update --init'
+            }
+        }
+        stage("SonarQube Build/Test") {
+            steps {
+                container('maven') {
+                    // get microservice name and version from pom.xml, then build image
+                    // RUN TEST VIA MVN / PASS to SQ
+                    sh """
+                        mvn -B clean package
+                        mvn sonar:sonar -Dsonar.host.url=http://sonarqube-sonarqube.kubesphere-devops-system:9000 -Dsonar.login="$SONARQUBE_CREDS"
+                    """
+                }
+            }
+        }
+        stage('Build Image'){
+            steps {
+                container('cloud-cli') {
+                    // get microservice name and version from pom.xml, then build image
+                    sh """
+                        VERSION=\$(grep -m 1 "<version>" pom.xml | awk -F'[><]' \'{print \$3}\')
+                        echo \$VERSION
+                        MODULE=\$(grep -m 2 "<module>" pom.xml | tail -1 | awk -F'[><]' \'{print \$3}\')
+                        docker build . \
+                            --build-arg NAME=\${MODULE} \
+                            --build-arg VERSION=\${VERSION} \
+                            --build-arg DIR=\${MODULE} \
+                            -t ${BRANCH_NAME}-${IMAGE_NAME}:${BUILD_ID}
+                    """
+                }
+            }
+        }
+        stage('CHECK/CREATE REPO AWS') {
+            when { environment name: 'CLOUD_PROVIDER', value: 'AWS' }
+            steps {
+                container('cloud-cli') {
+                    // create ECR repo if it doesn't already exist
+                    sh """
+                        aws ecr-public create-repository --repository-name ${BRANCH_NAME}-${IMAGE_NAME} || true
+                    """
+                }
+            }
+        }
+        stage('PUSH IMAGE TO REPO') {
+            steps {
+                container('cloud-cli') {
+                    // add repo tag and push to aws
+                    sh """
+                        docker tag ${BRANCH_NAME}-${IMAGE_NAME}:${BUILD_ID} ${IMAGE_REPO}/${BRANCH_NAME}-${IMAGE_NAME}:${BUILD_ID}
+                        docker push ${IMAGE_REPO}/${BRANCH_NAME}-${IMAGE_NAME} --all-tags
+                    """
+                }
+            }
+        }
+        stage('DEPLOY') {
+            // DETECTS DEPLOYMENT
+            when { environment name: 'UPDATE_DEPLOYMENT', value: 'true' }
+            steps {
+                // TRIGGER DEPLOYMENT PIPELINE
+                sh """
+                    build job: 'deploy-aline', parameters: [string(name: 'BUILD_BRANCH_NAME', value: env.BRANCH_NAME)]
+                """
+            }
+        }
+        stage('Remove Local Images') {
+            steps {
+                echo '=== Delete the local docker images ==='
+                script {
+                    sh("docker rmi -f ${IMAGE_REPO}/${BRANCH_NAME}-${IMAGE_NAME}:${BUILD_ID} || :")
+                }
+            }
+        }
+    }
+    post {
+        always {
+            container('cloud-cli') {
+                sh "docker system prune -f --volumes"
+            }
+        }
+    }
+}

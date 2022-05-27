@@ -63,8 +63,8 @@ pipeline {
 
         // DEV
         DEV_ACTIVE = 'true'
-        DEV_CLOUD_PROVIDER = 'GCP'
-        DEV_DEPLOYMENT_TYPE = 'ECS'
+        DEV_CLOUD_PROVIDER = 'AWS'
+        DEV_DEPLOYMENT_TYPE = 'EKS'
         DEV_NAMESPACE = 'dev'
         // STAGE
         STAGE_ACTIVE = 'false'
@@ -100,14 +100,40 @@ pipeline {
         // GKE VARIABLES
     }
     stages {
-        stage('DEPLOY DEV') {
+        stage('PROVIDER AUTHENTICATION AWS') {
+            // AUTHENTICATES INTO AWS
+            when { environment name: 'CLOUD_PROVIDER', value: 'AWS' }
+            steps {
+                container('cloud-cli') {
+                    sh """
+                    aws ecr-public get-login-password --region ${AWS_DEFAULT_REGION} |\
+                    docker login --username AWS --password-stdin ${IMAGE_REPO}
+                    """
+                }
+            }
+        }
+        stage('PROVIDER AUTHENTICATION GCP') {
+            // AUTHENTICATES INTO GCP
+            when { environment name: 'CLOUD_PROVIDER', value: 'GCP' }
+            steps {
+                container('cloud-cli') {
+                    sh """
+                    gcloud version
+                    gcloud auth activate-service-account --key-file="$GCLOUD_CREDS"
+                    gcloud auth configure-docker "$IMAGE_REPO_REGION"-docker.pkg.dev
+                    gcloud config set project "$PROJECT_ID"
+                    """
+                }
+            }
+        }
+        stage('DEPLOY') {
             // DETECTS BRANCH FOR USE IN IMAGE NAME
             when { 
                 environment name: 'DEV_ACTIVE', value: 'true'
                 environment name: 'BUILD_BRANCH_NAME', value: 'dev'
             }
             steps {
-                container('cloud-cli') {
+                container('terraform') {
                     sh """
                     #!/bin/bash
 

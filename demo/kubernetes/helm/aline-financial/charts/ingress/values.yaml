@@ -1,0 +1,11 @@
+# VALUES
+namespace: dev
+
+# INGRESS HOST ADDRESS
+hostname: localhost
+
+# APP PORTS
+bankPort: 8083
+transactionPort: 8073
+underwriterPort: 8071
+userPort: 8070

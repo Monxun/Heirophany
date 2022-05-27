@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aline-configmap
+  namespace: {{ .Values.namespace | quote }}
+data:
+  DDL_AUTO: "create-only"
+  DB_PORT: {{ .Values.dbPort | quote }}
+  PORTAL_ADMIN: {{ .Values.admin | quote }}
+  PORTAL_DASHBOARD: {{ .Values.dashboard | quote }}
+  PORTAL_LANDING: {{ .Values.landing | quote }}
+

@@ -1,0 +1,75 @@
+# VALUES
+
+# TAGS
+tags:
+  ingress: false
+  namespaces: true
+  csi-driver: true
+
+namespace: dev
+replicaCount: 1
+restartPolicy: Always
+
+dbPort: 3306
+
+secretsType: "opaque"
+
+Secrets:
+  DB_USERNAME: ""
+  DB_PASSWORD: ""
+  DB_NAME: ""
+  DB_HOST: ""
+  APP_SERVICE_HOST: ""
+  APP_USER_ACCESS_KEY: ""
+  APP_USER_SECRET_KEY: ""
+  JWT_SECRET_KEY: ""
+  ENCRYPT_SECRET_KEY: ""
+  S3_TEMPLATE_BUCKET: ""
+
+imageRepo: ""
+    
+Services:
+  - name: ms-bank
+    image: us-east1-docker.pkg.dev/aline-jenkins-gcp/nightwalkers-images/dev-aline-bank-mg:0.0.1
+    replicas: 1
+    container:
+      name: ms-bank
+      port: 8083
+      protocol: TCP
+      type: ClusterIP
+      restartPolicy: Always
+      path: '/(members|banks|branches).*'
+  - name: ms-transaction
+    image: us-east1-docker.pkg.dev/aline-jenkins-gcp/nightwalkers-images/dev-aline-transaction-mg:0.0.1
+    replicas: 1
+    container:
+      name: ms-transaction
+      port: 8073
+      protocol: TCP
+      type: ClusterIP
+      restartPolicy: Always
+      path: '/(transactions/?.*|(members|accounts)/.+/transactions)'
+  - name: ms-underwriter
+    image: us-east1-docker.pkg.dev/aline-jenkins-gcp/nightwalkers-images/dev-aline-underwriter-mg:0.0.1
+    replicas: 1
+    container:
+      name: ms-underwriter
+      port: 8071
+      protocol: TCP
+      type: ClusterIP
+      restartPolicy: Always
+      path: '/(applicants|applications).*'
+  - name: ms-user
+    image: us-east1-docker.pkg.dev/aline-jenkins-gcp/nightwalkers-images/dev-aline-user-mg:0.0.1
+    replicas: 1
+    container:
+      name: ms-user
+      port: 8070
+      protocol: TCP
+      type: ClusterIP
+      restartPolicy: Always
+      path: '/(users|login).*'
+
+adminPort: 3000
+dashboardPort: 3400
+landingPort: 3800
